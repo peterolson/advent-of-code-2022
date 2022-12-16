@@ -44,36 +44,22 @@ pub fn part1() {
         })
         .collect::<Vec<&Label>>();
 
-    println!("Non-zero valves: {:?}", non_zero_valves);
-
+    let mut relevant_labels = non_zero_valves.clone();
+    relevant_labels.push(&('A', 'A'));
     let mut distances: HashMap<(Label, Label), usize> = HashMap::new();
-    for label1 in valves_map.keys() {
-        println!("Label: {:?}", label1);
-        for label2 in valves_map.keys() {
-            let distance =
-                distance_between_labels(label1, label2, &valves_map, Vec::new(), &mut distances);
+    for label1 in &relevant_labels {
+        for label2 in &relevant_labels {
+            distance_between_labels(label1, label2, &valves_map, Vec::new(), &mut distances);
         }
     }
-
-    println!("Distances: {:?}", distances);
 
     let mut search_queue: VecDeque<(Vec<Label>, usize, usize)> = VecDeque::new();
     search_queue.push_back((Vec::new(), 30, 0));
     let mut max_pressure = 0;
-    let mut iterations = 0;
     while search_queue.len() > 0 {
         let (current_path, minutes_remaining, total_pressure) = search_queue.pop_front().unwrap();
         let mut current_label: Label = ('A', 'A');
         let mut can_move = false;
-        iterations += 1;
-        if iterations % 100000 == 0 {
-            println!(
-                "i: {}, l: {}, m: {}",
-                iterations,
-                search_queue.len(),
-                minutes_remaining
-            );
-        }
         if current_path.len() > 0 {
             current_label = current_path[current_path.len() - 1];
         }
@@ -96,7 +82,6 @@ pub fn part1() {
         if !can_move {
             if total_pressure > max_pressure {
                 max_pressure = total_pressure;
-                println!("New max pressure: {}", max_pressure);
             }
         }
     }
@@ -110,16 +95,6 @@ pub fn part1() {
     while search_queue.len() > 0 {
         let (current_path, minutes_remaining, total_pressure) = search_queue.pop_front().unwrap();
         let mut current_label: Label = ('A', 'A');
-        let mut can_move = false;
-        iterations += 1;
-        if iterations % 100000 == 0 {
-            println!(
-                "i: {}, l: {}, m: {}",
-                iterations,
-                search_queue.len(),
-                minutes_remaining
-            );
-        }
         if current_path.len() > 0 {
             current_label = current_path[current_path.len() - 1];
         }
@@ -131,21 +106,26 @@ pub fn part1() {
             if distance + 1 >= minutes_remaining {
                 continue;
             }
-            can_move = true;
             let mut new_path = current_path.clone();
             new_path.push(**target);
             let active_minutes = minutes_remaining - distance - 1;
             let total_pressure =
                 total_pressure + valves_map.get(target).unwrap().flow_rate * active_minutes;
             search_queue.push_back((new_path.clone(), active_minutes, total_pressure));
-            pressure_dict.insert(new_path, total_pressure);
+            new_path.sort();
+            if pressure_dict.contains_key(&new_path) {
+                let existing_pressure = pressure_dict.get(&new_path).unwrap();
+                if total_pressure > *existing_pressure {
+                    pressure_dict.insert(new_path, total_pressure);
+                }
+            } else {
+                pressure_dict.insert(new_path, total_pressure);
+            }
         }
     }
-    println!("Size of pressure dict: {}", pressure_dict.len());
 
     max_pressure = 0;
 
-    iterations = 0;
     let pressure_dict_keys = pressure_dict.keys().collect::<Vec<&Vec<Label>>>();
     for i in 0..pressure_dict_keys.len() {
         let key = pressure_dict_keys[i];
@@ -162,15 +142,7 @@ pub fn part1() {
             let total_pressure = person_pressure + elephant_pressure;
             if total_pressure > max_pressure {
                 max_pressure = total_pressure;
-                println!(
-                    "New max pressure: {}, Person: {:?}, Elephant: {:?}",
-                    max_pressure, person_path, elephant_path
-                );
             }
-        }
-        iterations += 1;
-        if iterations % 100 == 0 {
-            println!("i: {}, l: {}", iterations, pressure_dict.len());
         }
     }
 
