@@ -156,8 +156,6 @@ pub fn part1() {
     };
 
     let final_password = 1000 * final_row + 4*final_col + final_facing;
-
-    println!("Final row: {}, final col: {}, final facing: {}", final_row, final_col, final_facing);
-
+    
     println!("Day 22 Part 1: {}", final_password);
 }
